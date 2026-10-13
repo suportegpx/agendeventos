@@ -1,0 +1,82 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  COMERCIAL
+  TECNICO
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String        @unique
+  passwordHash String        @map("password_hash")
+  role         Role          @default(TECNICO)
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now()) @map("created_at")
+  
+  assignments  EventStaff[]
+  comments     EventComment[]
+
+  @@map("users")
+}
+
+model Client {
+  id           Int      @id @default(autoincrement())
+  companyName  String   @map("company_name")
+  contactName  String?  @map("contact_name")
+  phone        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  events       Event[]
+
+  @@map("clients")
+}
+
+model Event {
+  id                 Int            @id @default(autoincrement())
+  title              String
+  clientId           Int?           @map("client_id")
+  client             Client?        @relation(fields: [clientId], references: [id])
+  location           String
+  startDatetime      DateTime       @map("start_datetime")
+  endDatetime        DateTime       @map("end_datetime")
+  setupStartDatetime DateTime?      @map("setup_start_datetime")
+  status             String         @default("pendente")
+  notes              String?
+  createdAt          DateTime       @default(now()) @map("created_at")
+  
+  staffAssignments   EventStaff[]
+  comments           EventComment[]
+
+  @@map("events")
+}
+
+model EventStaff {
+  id           Int      @id @default(autoincrement())
+  eventId      Int      @map("event_id")
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId       Int      @map("user_id")
+  user         User     @relation(fields: [userId], references: [id])
+  assignedRole String   @map("assigned_role")
+
+  @@map("event_staff")
+}
+
+model EventComment {
+  id        Int      @id @default(autoincrement())
+  eventId   Int      @map("event_id")
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  comment   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("event_comments")
+}
