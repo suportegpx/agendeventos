@@ -156,3 +156,23 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Erro ao buscar eventos.' }, { status: 500 });
   }
 }
+// DELETE: Excluir evento inteiro
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID do evento não fornecido.' }, { status: 400 });
+    }
+
+    await prisma.event.delete({
+      where: { id: Number(id) },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Erro ao excluir evento:', error);
+    return NextResponse.json({ error: 'Erro ao excluir evento.' }, { status: 500 });
+  }
+}
